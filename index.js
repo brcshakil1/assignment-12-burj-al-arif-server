@@ -45,6 +45,7 @@ async function run() {
     const usersCollection = client.db("burjAlArifDB").collection("users");
 
     // auth related api
+    // login
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       console.log("I need a new jwt", user);
@@ -58,6 +59,22 @@ async function run() {
           sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true });
+    });
+
+    // logout
+    app.get("/logout", async (req, res) => {
+      try {
+        res
+          .clearCookie("token", {
+            maxAge: 0,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          })
+          .send({ success: true });
+        console.log("logout successfully");
+      } catch (err) {
+        res.status(500).send(err);
+      }
     });
 
     // get all apartments
