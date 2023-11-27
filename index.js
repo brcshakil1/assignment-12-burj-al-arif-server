@@ -45,6 +45,9 @@ async function run() {
       .collection("agreements");
 
     const usersCollection = client.db("burjAlArifDB").collection("users");
+    const announcementsCollection = client
+      .db("burjAlArifDB")
+      .collection("announcements");
 
     // auth related api
     // login
@@ -83,6 +86,7 @@ async function run() {
       next();
     };
 
+    // admin related apis
     // get admin
     app.get("/user/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -98,6 +102,7 @@ async function run() {
       res.send({ admin });
     });
 
+    // apartments related apis
     // get all apartments
     app.get("/apartments", async (req, res) => {
       const page = Number(req.query.page);
@@ -114,6 +119,7 @@ async function run() {
       res.send({ result, totalApartments });
     });
 
+    // users related apis
     // get all users
     app.get("/users", async (req, res) => {
       const role = req.query.role;
@@ -161,6 +167,7 @@ async function run() {
       res.send(result);
     });
 
+    // agreements related apis
     // all agreements
     app.get("/agreements", async (req, res) => {
       const status = req.query.status;
@@ -203,6 +210,19 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await agreementsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // Announcement apis
+    // get
+    app.get("/agreements", async (req, res) => {
+      const result = await agreementsCollection.find().toArray();
+      res.send(result);
+    });
+    // post
+    app.post("/announcements", async (req, res) => {
+      const agreementInfo = req.body;
+      const result = await announcementsCollection.insertOne(agreementInfo);
       res.send(result);
     });
 
