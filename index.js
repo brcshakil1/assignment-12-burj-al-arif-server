@@ -116,13 +116,59 @@ async function run() {
 
     // get all users
     app.get("/users", async (req, res) => {
-      const result = await usersCollection.find().toArray();
+      const role = req.query.role;
+      let query = {};
+      // user by role member
+      if (role === "member") {
+        query.role = role;
+      }
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // get a user
+    app.patch("/users/:email", async (req, res) => {
+      const userEmail = req.params.email;
+      console.log(userEmail);
+      const filter = { email: userEmail };
+      const updateUser = req.body;
+      console.log(updateUser);
+      const updatedDoc = {
+        $set: {
+          role: updateUser?.role,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+    // save and modify user name, email and role in DB
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const query = { email: email };
+      const options = { upsert: true };
+      const isExist = await usersCollection.findOne(query);
+      console.log("User found?------->", isExist);
+
+      if (isExist) return res.send(isExist);
+      const result = await usersCollection.updateOne(
+        query,
+        {
+          $set: { ...user, timeStamp: Date.now() },
+        },
+        options
+      );
       res.send(result);
     });
 
     // all agreements
     app.get("/agreements", async (req, res) => {
-      const result = await agreementsCollection.find().toArray();
+      const status = req.query.status;
+      console.log(status);
+      let query = {};
+      // agreement by status pending
+      if (status === "pending") query.status = status;
+      const result = await agreementsCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -153,23 +199,10 @@ async function run() {
       res.send(result);
     });
 
-    // save and modify user name, email and role in DB
-    app.put("/users/:email", async (req, res) => {
-      const email = req.params.email;
-      const user = req.body;
-      const query = { email: email };
-      const options = { upsert: true };
-      const isExist = await usersCollection.findOne(query);
-      console.log("User found?------->", isExist);
-
-      if (isExist) return res.send(isExist);
-      const result = await usersCollection.updateOne(
-        query,
-        {
-          $set: { ...user, timeStamp: Date.now() },
-        },
-        options
-      );
+    app.delete("/agreements-rejected/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await agreementsCollection.deleteOne(query);
       res.send(result);
     });
 
