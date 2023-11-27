@@ -3,7 +3,7 @@ const app = express();
 
 const cors = require("cors");
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
@@ -121,9 +121,35 @@ async function run() {
     });
 
     // all agreements
+    app.get("/agreements", async (req, res) => {
+      const result = await agreementsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // post agreement
     app.post("/agreements", async (req, res) => {
       const agreementInfo = req.body;
       const result = await agreementsCollection.insertOne(agreementInfo);
+      res.send(result);
+    });
+
+    // update agreement status
+    app.patch("/agreements/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateStatus = req.body;
+      const updatedDoc = {
+        $set: {
+          status: updateStatus?.status,
+          confirmationDate: updateStatus?.confirmationDate,
+        },
+      };
+      const result = await agreementsCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
       res.send(result);
     });
 
