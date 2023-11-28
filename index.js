@@ -40,14 +40,21 @@ async function run() {
       .db("burjAlArifDB")
       .collection("apartments");
 
+    // agreement collection
     const agreementsCollection = client
       .db("burjAlArifDB")
       .collection("agreements");
 
+    // users collection
     const usersCollection = client.db("burjAlArifDB").collection("users");
+
+    // announcements collections
     const announcementsCollection = client
       .db("burjAlArifDB")
       .collection("announcements");
+
+    // coupons collections
+    const couponsCollections = client.db("burjAlArifDB").collection("coupons");
 
     // auth related api
     // login
@@ -223,6 +230,13 @@ async function run() {
     app.post("/announcements", async (req, res) => {
       const agreementInfo = req.body;
       const result = await announcementsCollection.insertOne(agreementInfo);
+      res.send(result);
+    });
+
+    // Coupons apis
+    // get all coupons
+    app.get("/coupons", async (req, res) => {
+      const result = await couponsCollections.find().toArray();
       res.send(result);
     });
 
