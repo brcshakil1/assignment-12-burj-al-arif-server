@@ -2,10 +2,12 @@ const express = require("express");
 const app = express();
 
 const cors = require("cors");
-const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe", process.env.STRIPE_SECRET_KEY);
+
+const port = process.env.PORT || 5000;
 
 // middlewares
 app.use(express.json());
@@ -72,14 +74,16 @@ async function run() {
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "unauthorized access" });
       }
-      const token = req.headers.authorization.split(" ")[1];
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          return res.status(401).send({ message: "unauthorized access" });
-        }
-        req.decoded = decoded;
-        next();
-      });
+      const token = req.headers.authorization;
+      console.log(token);
+      // jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      //   if (err) {
+      //     return res.status(401).send({ message: "unauthorized access" });
+      //   }
+      //   req.decoded = decoded;
+      //   next();
+      // });
+      next();
     };
 
     const verifyAdmin = async (req, res, next) => {
@@ -176,13 +180,21 @@ async function run() {
 
     // agreements related apis
     // all agreements
-    app.get("/agreements", async (req, res) => {
+    app.get("/agreements", verifyToken, async (req, res) => {
       const status = req.query.status;
-      console.log(status);
+
       let query = {};
       // agreement by status pending
       if (status === "pending") query.status = status;
+      if (status === "checked") query.status = status;
       const result = await agreementsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/agreements/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await agreementsCollection.findOne(query);
       res.send(result);
     });
 
@@ -222,8 +234,8 @@ async function run() {
 
     // Announcement apis
     // get
-    app.get("/agreements", async (req, res) => {
-      const result = await agreementsCollection.find().toArray();
+    app.get("/announcements", async (req, res) => {
+      const result = await announcementsCollection.find().toArray();
       res.send(result);
     });
     // post
@@ -238,6 +250,37 @@ async function run() {
     app.get("/coupons", async (req, res) => {
       const result = await couponsCollections.find().toArray();
       res.send(result);
+    });
+
+    // post
+    app.post("/coupons", async (req, res) => {
+      const coupons = req.body;
+      const result = await couponsCollections.insertOne(coupons);
+      res.send(result);
+    });
+
+    app.delete("/coupons/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+
+      const result = await couponsCollections.deleteOne(query);
+      res.send(result);
+    });
+
+    // Payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(amount, "amount inside the intent");
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
     });
 
     // Send a ping to confirm a successful connection
