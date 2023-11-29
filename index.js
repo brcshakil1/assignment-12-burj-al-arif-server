@@ -274,7 +274,6 @@ async function run() {
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
-      console.log(amount, "amount inside the intent");
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -287,6 +286,25 @@ async function run() {
     });
 
     // payment related api
+
+    app.get("/payments", async (req, res) => {
+      const email = req.query.email;
+      const rentedMonth = req.query.rentedMonth;
+      console.log(rentedMonth);
+      let query = {};
+
+      if (email) {
+        query.email = email;
+      }
+
+      if (rentedMonth) {
+        query.rentedMonth = rentedMonth;
+      }
+
+      const result = await paymentsCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post("/payments", async (req, res) => {
       const paymentInfo = req.body;
       const result = await paymentsCollection.insertOne(paymentInfo);
