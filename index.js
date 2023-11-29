@@ -5,7 +5,7 @@ const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const stripe = require("stripe", process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 
@@ -180,7 +180,7 @@ async function run() {
 
     // agreements related apis
     // all agreements
-    app.get("/agreements", verifyToken, async (req, res) => {
+    app.get("/agreements", async (req, res) => {
       const status = req.query.status;
 
       let query = {};
