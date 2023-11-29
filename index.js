@@ -58,6 +58,9 @@ async function run() {
     // coupons collections
     const couponsCollections = client.db("burjAlArifDB").collection("coupons");
 
+    // payment collection
+    const paymentsCollection = client.db("burjAlArifDB").collection("payments");
+
     // auth related api
     // login
     app.post("/jwt", async (req, res) => {
@@ -281,6 +284,18 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    // payment related api
+    app.post("/payments", async (req, res) => {
+      const paymentInfo = req.body;
+      const result = await paymentsCollection.insertOne(paymentInfo);
+
+      const query = { _id: new ObjectId(paymentInfo?.agreementId) };
+
+      const deleteResult = await agreementsCollection.deleteOne(query);
+
+      res.send({ result, deleteResult });
     });
 
     // Send a ping to confirm a successful connection
