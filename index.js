@@ -72,22 +72,22 @@ async function run() {
     });
 
     // middlewares
-    const verifyToken = (req, res, next) => {
-      console.log("inside verify token", req.headers);
-      if (!req.headers.authorization) {
-        return res.status(401).send({ message: "unauthorized access" });
-      }
-      const token = req.headers.authorization;
-      console.log(token);
-      // jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-      //   if (err) {
-      //     return res.status(401).send({ message: "unauthorized access" });
-      //   }
-      //   req.decoded = decoded;
-      //   next();
-      // });
-      next();
-    };
+    // const verifyToken = (req, res, next) => {
+    //   console.log("inside verify token", req.headers);
+    //   if (!req.headers.authorization) {
+    //     return res.status(401).send({ message: "unauthorized access" });
+    //   }
+    //   const token = req.headers.authorization.split(" ")[1];
+    //   console.log(token);
+    //   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    //     if (err) {
+    //       return res.status(401).send({ message: "unauthorized access" });
+    //     }
+    //     req.decoded = decoded;
+    //     next();
+    //   });
+    //   next();
+    // };
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -102,18 +102,21 @@ async function run() {
 
     // admin related apis
     // get admin
-    app.get("/user/admin/:email", verifyToken, async (req, res) => {
+    app.get("/user/admin/:email", async (req, res) => {
       const email = req.params.email;
-      if (email !== email) {
-        return res.status(403).send({ message: "unauthorized access" });
-      }
+      console.log(email);
       const query = { email: email };
       const user = await usersCollection.findOne(query);
+      console.log(user);
       let admin = false;
+      let member = false;
       if (user) {
         admin = user?.role === "admin";
       }
-      res.send({ admin });
+      if (user) {
+        member = user?.role === "member";
+      }
+      res.send({ admin, member });
     });
 
     // apartments related apis
@@ -140,6 +143,9 @@ async function run() {
       let query = {};
       // user by role member
       if (role === "member") {
+        query.role = role;
+      }
+      if (role === "user") {
         query.role = role;
       }
       const result = await usersCollection.find(query).toArray();
@@ -302,7 +308,8 @@ async function run() {
       }
 
       const result = await paymentsCollection.find(query).toArray();
-      res.send(result);
+      const totalRented = await paymentsCollection.estimatedDocumentCount();
+      res.send({ result, totalRented });
     });
 
     app.post("/payments", async (req, res) => {
