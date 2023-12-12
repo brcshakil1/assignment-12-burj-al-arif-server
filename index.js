@@ -118,12 +118,21 @@ async function run() {
     // apartments related apis
     // get all apartments
     app.get("/apartments", async (req, res) => {
+      const floor = req.query.floorNo;
       const page = Number(req.query.page);
       const limit = Number(req.query.limit);
       const skip = (page - 1) * limit;
+      console.log("page is", page);
+      // filter by floor
+      const query = {};
+      if (floor > 0) {
+        query.floorNo = parseInt(floor);
+      }
+
+      console.log(query);
 
       const result = await apartmentsCollection
-        .find()
+        .find(query)
         .skip(skip)
         .limit(limit)
         .toArray();
