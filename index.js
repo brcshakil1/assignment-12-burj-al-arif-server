@@ -100,10 +100,10 @@ async function run() {
     // get admin
     app.get("/user/admin/:email", async (req, res) => {
       const email = req.params.email;
-      console.log(email);
+      // console.log(email);
       const query = { email: email };
       const user = await usersCollection.findOne(query);
-      console.log(user);
+      // console.log(user);
       let admin = false;
       let member = false;
       if (user) {
@@ -122,14 +122,14 @@ async function run() {
       const page = Number(req.query.page);
       const limit = Number(req.query.limit);
       const skip = (page - 1) * limit;
-      console.log("page is", page);
+      // console.log("page is", page);
       // filter by floor
       const query = {};
       if (floor > 0) {
         query.floorNo = parseInt(floor);
       }
 
-      console.log(query);
+      // console.log(query);
 
       const result = await apartmentsCollection
         .find(query)
@@ -139,6 +139,13 @@ async function run() {
       const totalApartments =
         await apartmentsCollection.estimatedDocumentCount();
       res.send({ result, totalApartments });
+    });
+
+    // apartment post
+    app.post("/apartments", async (req, res) => {
+      const apartment = req.body;
+      const result = await apartmentsCollection.insertOne(apartment);
+      res.send(result);
     });
 
     // users related apis
@@ -160,10 +167,10 @@ async function run() {
     // get a user
     app.patch("/users/:email", async (req, res) => {
       const userEmail = req.params.email;
-      console.log(userEmail);
+      // console.log(userEmail);
       const filter = { email: userEmail };
       const updateUser = req.body;
-      console.log(updateUser);
+      // console.log(updateUser);
       const updatedDoc = {
         $set: {
           role: updateUser?.role,
@@ -179,7 +186,7 @@ async function run() {
       const query = { email: email };
       const options = { upsert: true };
       const isExist = await usersCollection.findOne(query);
-      console.log("User found?------->", isExist);
+      // console.log("User found?------->", isExist);
 
       if (isExist) return res.send(isExist);
       const result = await usersCollection.updateOne(
@@ -301,7 +308,7 @@ async function run() {
     app.get("/payments", async (req, res) => {
       const email = req.query.email;
       const rentedMonth = req.query.rentedMonth;
-      console.log(rentedMonth);
+      // console.log(rentedMonth);
       let query = {};
 
       if (email) {
